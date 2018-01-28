@@ -30,10 +30,10 @@ let FOV = 30;
 //For the Position Based Fluids
 let updateSimulation = true;
 let deltaTime = 0.01;
-let constrainsIterations = 1;
-let pbfResolution = 64;
-let voxelTextureSize = 512;
-let particlesTextureSize = 1000;
+let constrainsIterations = 4;
+let pbfResolution = 90;
+//let voxelTextureSize = 1024;
+//let particlesTextureSize = 1000;
 let particlesPosition = [];
 let particlesVelocity = []
 let currentFrame = 0;
@@ -56,21 +56,23 @@ let blurSteps = 10;
 let range = 0.26;
 let maxCells = 3.5;
 let fastNormals = false;
-let radius = pbfResolution * 0.39;
+let radius = pbfResolution * 0.29;
 
 //Generate the position and velocity
+let totalParticles = 0;
 for (let i = 0; i < pbfResolution; i++) {
     for (let j = 0; j < pbfResolution; j++) {
         for (let k = 0; k < pbfResolution; k++) {
 
             //Condition for the particle position and existence
             let x = i - pbfResolution * 0.5;
-            let y = j - pbfResolution * 0.5;
+            let y = j - pbfResolution * 0.7;
             let z = k - pbfResolution * 0.5;
 
             if (x * x + y * y + z * z < radius * radius && k < pbfResolution * 0.4) {
                 particlesPosition.push(i, j, k, 1);
                 particlesVelocity.push(0, 0, 0, 0); //Velocity is zero for all the particles.
+                totalParticles ++;
             }
         }
     }
@@ -99,7 +101,7 @@ phongTrianglesProgram.cameraPosition = gl.getUniformLocation(phongTrianglesProgr
 //=======================================================================================================
 
 //Initiate the position based fluids solver
-    PBF.init(particlesPosition, particlesVelocity, pbfResolution, voxelTextureSize, particlesTextureSize);
+    PBF.init(particlesPosition, particlesVelocity, pbfResolution, Math.ceil(Math.sqrt(Math.pow(resolution, 3))), Math.ceil(Math.sqrt(totalParticles)));
 particlesPosition = null;
 particlesVelocity = null;
 
@@ -111,6 +113,7 @@ let render = () => {
     requestAnimationFrame(render);
 
     camera.updateCamera(FOV, 1, cameraDistance);
+
     let acceleration = {
         x: 0 * Math.sin(currentFrame * Math.PI / 180),
         y: -10,
@@ -120,10 +123,11 @@ let render = () => {
 
     if (updateSimulation) {
         //Update the simulation
-        PBF.updateFrame(acceleration, deltaTime, constrainsIterations);
 
-        //Generate the mesh from the simulation particles
-        Mesher.generateMesh(PBF.positionTexture, PBF.totalParticles, pbfResolution, particleSize, blurSteps, range, maxCells, fastNormals);
+        PBF.updateFrame(acceleration, deltaTime, constrainsIterations, 0.8 * camera.alpha / (2 * Math.PI));
+
+//        //Generate the mesh from the simulation particles
+//        Mesher.generateMesh(PBF.positionTexture, PBF.totalParticles, pbfResolution, particleSize, blurSteps, range, maxCells, fastNormals);
 
         currentFrame++;
 
@@ -151,20 +155,20 @@ let render = () => {
 //    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
 
-    let activeMCells = Math.ceil(maxCells * expandedTextureSize * expandedTextureSize / 100);
-
-
-    //Render the triangles
-    gl.useProgram(phongTrianglesProgram);
-    gl.viewport(canvas.height, 0, canvas.height, canvas.height);
-    webGL2.bindTexture(phongTrianglesProgram.textureTriangles, Mesher.tTriangles, 0);
-    webGL2.bindTexture(phongTrianglesProgram.textureNormals, Mesher.tNormals, 1);
-    gl.uniformMatrix4fv(phongTrianglesProgram.cameraMatrix, false, camera.cameraTransformMatrix);
-    gl.uniformMatrix4fv(phongTrianglesProgram.perspectiveMatrix, false, camera.perspectiveMatrix);
-    gl.uniform3f(phongTrianglesProgram.cameraPosition, camera.position[0], camera.position[1], camera.position[2]);
-    gl.enable(gl.DEPTH_TEST);
-    gl.drawArrays(gl.TRIANGLES, 0, 15 * activeMCells);
-    gl.disable(gl.DEPTH_TEST);
+//    let activeMCells = Math.ceil(maxCells * expandedTextureSize * expandedTextureSize / 100);
+//
+//
+//    //Render the triangles
+//    gl.useProgram(phongTrianglesProgram);
+//    gl.viewport(canvas.height, 0, canvas.height, canvas.height);
+//    webGL2.bindTexture(phongTrianglesProgram.textureTriangles, Mesher.tTriangles, 0);
+//    webGL2.bindTexture(phongTrianglesProgram.textureNormals, Mesher.tNormals, 1);
+//    gl.uniformMatrix4fv(phongTrianglesProgram.cameraMatrix, false, camera.cameraTransformMatrix);
+//    gl.uniformMatrix4fv(phongTrianglesProgram.perspectiveMatrix, false, camera.perspectiveMatrix);
+//    gl.uniform3f(phongTrianglesProgram.cameraPosition, camera.position[0], camera.position[1], camera.position[2]);
+//    gl.enable(gl.DEPTH_TEST);
+//    gl.drawArrays(gl.TRIANGLES, 0, 15 * activeMCells);
+//    gl.disable(gl.DEPTH_TEST);
 
 
 };

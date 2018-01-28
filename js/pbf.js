@@ -128,6 +128,7 @@ let init = (particlesPosition, particlesVelocity, _bucketSize, _voxelsTextureSiz
     calculateDisplacementsProgram.tensileConstant           = gl.getUniformLocation(calculateDisplacementsProgram, "uTensileK");
     calculateDisplacementsProgram.tensilePower              = gl.getUniformLocation(calculateDisplacementsProgram, "uTensilePower");
     calculateDisplacementsProgram.tensileDistance           = gl.getUniformLocation(calculateDisplacementsProgram, "uTensileDistance");
+    calculateDisplacementsProgram.shakeY                    = gl.getUniformLocation(calculateDisplacementsProgram, "uDisplaceY");
 
 
     calculateViscosityProgram                               = webGL2.generateProgram(calculateViscosity, fsColor);
@@ -161,7 +162,7 @@ let init = (particlesPosition, particlesVelocity, _bucketSize, _voxelsTextureSiz
 // Simulation and Rendering (Particle Based Fluids
 //=======================================================================================================
 
-let updateFrame = (acceleration, deltaTime, constrainsIterations) => {
+let updateFrame = (acceleration, deltaTime, constrainsIterations, shakeY) => {
 
     //Apply external forces (gravity)
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, pbfBuffer1);
@@ -212,6 +213,7 @@ let updateFrame = (acceleration, deltaTime, constrainsIterations) => {
         gl.uniform1f(calculateDisplacementsProgram.tensileConstant, tensileConstant);
         gl.uniform1f(calculateDisplacementsProgram.tensileDistance, tensileDistance);
         gl.uniform1f(calculateDisplacementsProgram.tensilePower, tensilePower);
+        gl.uniform1f(calculateDisplacementsProgram.shakeY, shakeY);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.POINTS, 0, totalParticles);
 

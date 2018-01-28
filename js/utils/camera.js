@@ -56,6 +56,8 @@ class Camera {
             if (this.alpha >= 0.99 *  Math.PI) this.alpha = 0.99 * Math.PI;
         }
 
+        this._alpha = Math.PI * 0.5;
+
         if (this._alpha != this.alpha || this._beta != this.beta || this.init) {
             this._alpha += (this.alpha - this._alpha) / 7;
             this._beta += (this.beta - this._beta) / 7;
